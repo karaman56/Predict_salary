@@ -8,9 +8,7 @@ from terminaltables import AsciiTable
 def get_api_key():
     load_dotenv()
     api_key = os.getenv('API_KEY')
-    if not api_key:
-        raise ValueError("API_KEY не установлен в переменных окружения.")
-    return api_key
+    
 
 def get_languages():
     return [
