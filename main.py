@@ -5,12 +5,7 @@ from terminaltables import AsciiTable
 
 def get_sj_api_key():
     load_dotenv()
-<<<<<<< HEAD
     return os.getenv('SJ_API_KEY')
-=======
-    api_key = os.getenv('API_KEY')
-    
->>>>>>> eb57db293de24bf8b67474e6d2c88d59b16f7447
 
 def get_languages():
     return [
