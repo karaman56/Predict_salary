@@ -110,27 +110,25 @@ def predict_rub_salary_sj(vacancy):
     return predict_salary(vacancy.get('payment_from'), vacancy.get('payment_to'))
 
 def get_sj_statistics(languages, sj_api_key):
-    statistics = {
-        language: {
-            "vacancies_found": 0,
-            "vacancies_processed": 0,
-            "average_salary": 0
-        } for language in languages
-    }
+    statistics = {language: {"vacancies_found": 0, "vacancies_processed": 0, "average_salary": 0} for language in languages}
 
     for language in languages:
         vacancies, _ = search_programmer_vacancies(language, town_id=4, catalog_id=48, sj_api_key=sj_api_key)
 
         for vacancy in vacancies:
             salary = predict_rub_salary_sj(vacancy)
-            statistics[language]["vacancies_found"] += 1
-            if salary:
-                statistics[language]["vacancies_processed"] += 1
-                statistics[language]["average_salary"] += salary
+            statistics[language] = {
+                "vacancies_found": statistics[language]["vacancies_found"] + 1,
+                "vacancies_processed": statistics[language]["vacancies_processed"] + (1 if salary else 0),
+                "average_salary": statistics[language]["average_salary"] + (salary if salary else 0)
+            }
 
-    for profession, stats in statistics.items():
-        if stats["vacancies_processed"] > 0:
-            stats["average_salary"] /= stats["vacancies_processed"]
+    for language, stats in statistics.items():
+        statistics[language] = {
+            "vacancies_found": stats["vacancies_found"],
+            "vacancies_processed": stats["vacancies_processed"],
+            "average_salary": stats["average_salary"] / stats["vacancies_processed"] if stats["vacancies_processed"] > 0 else 0
+        }
 
     return statistics
 
