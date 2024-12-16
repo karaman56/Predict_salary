@@ -39,7 +39,6 @@ def predict_rub_salary(vacancy):
 def get_hh_statistics(languages):
     salary_statistics = {}
     for language in languages:
-        vacancies_found = 0
         vacancies_processed = 0
         total_salary = 0
         page = 0
@@ -56,8 +55,8 @@ def get_hh_statistics(languages):
                 break
 
             hh_vacancies = response.json()
-            if page == 0:
-                vacancies_found = hh_vacancies.get('found', 0)
+            vacancies_found = hh_vacancies.get('found', 0)  
+
             if 'items' not in hh_vacancies or not hh_vacancies['items']:
                 break
 
@@ -97,13 +96,11 @@ def search_programmer_vacancies(keyword, town_id, catalog_id, sj_api_key):
         if not response.ok:
             print(f"Ошибка при запросе к SuperJob API: {response.status_code} - {response.text}")
             break
-
         sj_vacancies = response.json()
         if 'objects' not in sj_vacancies or not sj_vacancies['objects']:
             break
         vacancies.extend(sj_vacancies.get('objects', []))
         page += 1
-
     return vacancies, sj_vacancies.get('total', 0)
 
 def predict_rub_salary_sj(vacancy):
@@ -111,24 +108,17 @@ def predict_rub_salary_sj(vacancy):
 
 def get_sj_statistics(languages, sj_api_key):
     statistics = {language: {"vacancies_found": 0, "vacancies_processed": 0, "average_salary": 0} for language in languages}
-
     for language in languages:
-        vacancies, _ = search_programmer_vacancies(language, town_id=4, catalog_id=48, sj_api_key=sj_api_key)
-
+        vacancies, total_found = search_programmer_vacancies(language, town_id=4, catalog_id=48, sj_api_key=sj_api_key)
+        statistics[language]["vacancies_found"] = total_found
         for vacancy in vacancies:
             salary = predict_rub_salary_sj(vacancy)
-            statistics[language] = {
-                "vacancies_found": statistics[language]["vacancies_found"] + 1,
-                "vacancies_processed": statistics[language]["vacancies_processed"] + (1 if salary else 0),
-                "average_salary": statistics[language]["average_salary"] + (salary if salary else 0)
-            }
+            statistics[language]["vacancies_processed"] += 1
+            if salary:
+                statistics[language]["average_salary"] += salary
 
     for language, stats in statistics.items():
-        statistics[language] = {
-            "vacancies_found": stats["vacancies_found"],
-            "vacancies_processed": stats["vacancies_processed"],
-            "average_salary": stats["average_salary"] / stats["vacancies_processed"] if stats["vacancies_processed"] > 0 else 0
-        }
+        statistics[language]["average_salary"] /= stats["vacancies_processed"] if stats["vacancies_processed"] > 0 else 1
 
     return statistics
 
@@ -157,4 +147,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
