@@ -55,7 +55,7 @@ def get_hh_statistics(languages):
                 break
 
             hh_vacancies = response.json()
-            vacancies_found = hh_vacancies.get('found', 0)  
+            vacancies_found = hh_vacancies.get('found', 0)
 
             if 'items' not in hh_vacancies or not hh_vacancies['items']:
                 break
@@ -118,7 +118,8 @@ def get_sj_statistics(languages, sj_api_key):
                 statistics[language]["average_salary"] += salary
 
     for language, stats in statistics.items():
-        statistics[language]["average_salary"] /= stats["vacancies_processed"] if stats["vacancies_processed"] > 0 else 1
+        if stats["vacancies_processed"]:  
+            statistics[language]["average_salary"] /= stats["vacancies_processed"]
 
     return statistics
 
@@ -147,6 +148,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
