@@ -50,13 +50,8 @@ def get_hh_statistics(languages):
                 "page": page
             }
             response = requests.get("https://api.hh.ru/vacancies", params=params)
-            if not response.ok:
-                print(f"Ошибка при запросе к HH API: {response.status_code} - {response.text}")
-                break
-
             hh_vacancies = response.json()
             vacancies_found = hh_vacancies.get('found', 0)
-
             if 'items' not in hh_vacancies or not hh_vacancies['items']:
                 break
 
@@ -108,20 +103,25 @@ def predict_rub_salary_sj(vacancy):
 
 def get_sj_statistics(languages, sj_api_key):
     statistics = {language: {"vacancies_found": 0, "vacancies_processed": 0, "average_salary": 0} for language in languages}
+
     for language in languages:
         vacancies, total_found = search_programmer_vacancies(language, town_id=4, catalog_id=48, sj_api_key=sj_api_key)
-        statistics[language]["vacancies_found"] = total_found
+        vacancies_found = total_found
+        vacancies_processed = 0
+        total_salary = 0
         for vacancy in vacancies:
             salary = predict_rub_salary_sj(vacancy)
-            statistics[language]["vacancies_processed"] += 1
+            vacancies_processed += 1
             if salary:
-                statistics[language]["average_salary"] += salary
-
-    for language, stats in statistics.items():
-        if stats["vacancies_processed"]:  
-            statistics[language]["average_salary"] /= stats["vacancies_processed"]
-
+                total_salary += salary
+        average_salary = total_salary / (vacancies_processed or 1)
+        statistics[language] = {
+            "vacancies_found": vacancies_found,
+            "vacancies_processed": vacancies_processed,
+            "average_salary": average_salary
+        }
     return statistics
+
 
 def print_statistics_table(statistics, title):
     table_data = [[title, "Найдено вакансий", "Обработано вакансий", "Средняя зарплата"]]
